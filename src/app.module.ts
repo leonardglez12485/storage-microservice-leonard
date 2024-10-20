@@ -32,4 +32,3 @@ import { User } from './auth/entities/user.entity';
   providers: [],
 })
 export class AppModule {}
-
