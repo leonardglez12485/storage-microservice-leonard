@@ -1,9 +1,7 @@
 import {
-  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
-  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
@@ -22,7 +20,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async loginUserV2(loginUserDto: LoginUserDto) {
+  async loginUser(loginUserDto: LoginUserDto) {
+    console.log(loginUserDto);
     const user = await this.userRepository.findOne({
       where: { email: loginUserDto.email.toLowerCase() },
     });
@@ -31,23 +30,28 @@ export class AuthService {
       throw new UnauthorizedException(`Email ${loginUserDto.email} not valid`);
     }
 
-    if (!user.isActive) {
-      throw new HttpException('User is disabled', HttpStatus.FORBIDDEN);
-    }
+    // if (!user.isActive) {
+    //   throw new HttpException('User is disabled', HttpStatus.FORBIDDEN);
+    // }
 
     const isPasswordValid = await user.validatePassword(loginUserDto.password);
     if (!isPasswordValid) {
       throw new HttpException('Wrong credentials', HttpStatus.FORBIDDEN);
     }
 
-    const token = this.jwtService.sign({ _id: user.id.toString() });
+    const payload = { username: user.email, sub: user.id };
+    const token = this.jwtService.sign(payload, {
+      expiresIn: '1h',
+      secret: process.env.JWT_SECRET,
+    });
 
     return {
+      user,
       token,
     };
   }
 
-  async loginUser(loginUserDto: LoginUserDto) {
+  async loginUserV2(loginUserDto: LoginUserDto) {
     //==== Simulating a database user=====//
     const mockUser = {
       id: '1233456789',

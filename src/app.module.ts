@@ -6,6 +6,7 @@ import { JoiValidationSchema } from './aplication/config/joi.validation';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './auth/entities/user.entity';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { User } from './auth/entities/user.entity';
     TypeOrmModule.forFeature([User]),
     ImagesModule,
     AuthModule,
+    SeedModule,
   ],
   controllers: [],
   providers: [],

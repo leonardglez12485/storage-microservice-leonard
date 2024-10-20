@@ -1,4 +1,12 @@
-import { Entity, Column, PrimaryGeneratedColumn, BeforeInsert } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  BeforeInsert,
+  OneToMany,
+} from 'typeorm';
+import { Image } from 'src/aplication/images/entities/image.entity';
+
 import * as bcrypt from 'bcrypt';
 
 @Entity()

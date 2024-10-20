@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { CreateImageDto } from './dto/create-image.dto';
 import { FirebaseService } from '../../services/firebase/firebase.service';
-//import { isValidImage } from 'src/common/helpers/valid-image.helper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Image } from './entities/image.entity';
@@ -36,7 +35,7 @@ export class ImageService {
     const ownerId = user.sub;
 
     if (!this.isValidImage(file)) {
-      throw new Error('Only image files are allowed');
+      throw new BadRequestException('Only image files are allowed');
     }
     if (!file) {
       throw new NotFoundException('Image Not Found');
@@ -156,7 +155,6 @@ export class ImageService {
       throw new NotFoundException('Image not found');
     }
 
-    console.log(imageFound.ownerId);
     const user = await this.userRepository.findOne({
       where: { id: imageFound.ownerId },
     });
@@ -165,7 +163,6 @@ export class ImageService {
       throw new NotFoundException('User not found');
     }
 
-    //if(imageFound)
     return imageFound;
   }
 

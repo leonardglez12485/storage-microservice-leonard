@@ -24,6 +24,8 @@ import { Image } from './entities/image.entity';
 //import { SizeImage } from 'src/common/enums/size-image.enum';
 import { GetImageDto } from './dto/get-image.dto';
 import { User } from 'src/auth/entities/user.entity';
+import { IsImageFile } from 'src/common/validator/custom.validators';
+import { ValidatorConstraint } from 'class-validator';
 
 @ApiTags('Images')
 @Controller('images')
