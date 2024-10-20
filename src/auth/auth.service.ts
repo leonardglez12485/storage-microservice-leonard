@@ -31,9 +31,9 @@ export class AuthService {
       throw new UnauthorizedException(`Email ${loginUserDto.email} not valid`);
     }
 
-    // if (!user.isActive) {
-    //   throw new HttpException('User is disabled', HttpStatus.FORBIDDEN);
-    // }
+    if (!user.isActive) {
+      throw new HttpException('User is disabled', HttpStatus.FORBIDDEN);
+    }
 
     const isPasswordValid = await user.validatePassword(loginUserDto.password);
     if (!isPasswordValid) {
@@ -48,7 +48,7 @@ export class AuthService {
   }
 
   async loginUser(loginUserDto: LoginUserDto) {
-    // Simulación de un usuario de la base de datos
+    //==== Simulating a database user=====//
     const mockUser = {
       id: '1233456789',
       email: 'test@example.com',
@@ -56,7 +56,7 @@ export class AuthService {
       validatePassword: async (password: string) => password === 'Password123',
     };
 
-    // Simulación de la búsqueda del usuario
+    // Simulating a search users
     const user =
       mockUser.email === loginUserDto.email.toLowerCase() ? mockUser : null;
 
@@ -64,16 +64,10 @@ export class AuthService {
       throw new UnauthorizedException(`Email ${loginUserDto.email} not valid`);
     }
 
-    // Eliminamos la validación del estado del usuario
-    // if (!user.isActive) {
-    //   throw new HttpException('User is disabled', HttpStatus.FORBIDDEN);
-    // }
+    if (!user.isActive) {
+      throw new HttpException('User is disabled', HttpStatus.FORBIDDEN);
+    }
 
-    // Eliminamos la validación de la contraseña
-    // const isPasswordValid = await user.validatePassword(loginUserDto.password);
-    // if (!isPasswordValid) {
-    //   throw new HttpException('Wrong credentials', HttpStatus.FORBIDDEN);
-    // }
     const payload = { username: user.email, sub: user.id };
     const token = this.jwtService.sign(payload, {
       expiresIn: '1h',
@@ -99,22 +93,5 @@ export class AuthService {
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const newUser = this.userRepository.create(createUserDto);
     return this.userRepository.save(newUser);
-  }
-
-  //   private getJwtToken(payload: JwtPayloadInterface) {
-  //     const token = this.jwtService.sign(payload);
-  //     return token;
-  //   }
-
-  //===========================
-  //===Manejando los Errores===
-  //===========================
-  private handleErrors(error: any): never {
-    if (error.code === 11000)
-      throw new BadRequestException(
-        error.detail,
-        'Email already exist in DB, please change it !!!',
-      );
-    throw new InternalServerErrorException('Please check servers logs !!!');
   }
 }

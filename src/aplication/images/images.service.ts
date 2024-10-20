@@ -1,14 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateImageDto } from './dto/create-image.dto';
-import { FirebaseService } from 'src/services/firebase/firebase.service';
+import { FirebaseService } from '../../services/firebase/firebase.service';
 //import { isValidImage } from 'src/common/helpers/valid-image.helper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Image } from './entities/image.entity';
 import * as sharp from 'sharp';
 import Redis from 'ioredis';
-import { RedisService } from 'src/services/redis/redis.service';
-//import { SizeImage } from 'src/common/enums/size-image.enum';
+import { RedisService } from '../../services/redis/redis.service';
 import { GetImageDto } from './dto/get-image.dto';
 
 @Injectable()
@@ -31,26 +34,36 @@ export class ImageService {
     if (!this.isValidImage(file)) {
       throw new Error('Only image files are allowed');
     }
+    if (!file) {
+      throw new NotFoundException('Image Not Found');
+    }
 
     const url = await this.firebaseService.uploadFile(file);
 
-    const thumbnailBuffer = await this.generateThumbnail(file.buffer);
-    const thumbnailUrl = await this.firebaseService.uploadFile({
-      originalname: `thumbnail-${file.originalname}`,
-      buffer: thumbnailBuffer,
-      fieldname: file.fieldname,
-      encoding: file.encoding,
-      mimetype: file.mimetype,
-      size: thumbnailBuffer.length,
-      stream: file.stream,
-      destination: file.destination,
-      filename: file.filename,
-      path: file.path,
-    });
+    let thumbnailBuffer;
+    let thumbnailUrlSaved: string;
+    if (file.buffer) {
+      thumbnailBuffer = await this.generateThumbnail(file.buffer);
+      const thumbnailUrl = await this.firebaseService.uploadFile({
+        originalname: `thumbnail-${file.originalname}`,
+        buffer: thumbnailBuffer,
+        fieldname: file.fieldname,
+        encoding: file.encoding,
+        mimetype: file.mimetype,
+        size: thumbnailBuffer.length,
+        stream: file.stream,
+        destination: file.destination,
+        filename: file.filename,
+        path: file.path,
+      });
+      thumbnailUrlSaved = thumbnailUrl.downloadURL;
+    } else {
+      thumbnailUrlSaved = '';
+    }
 
     const image = new Image();
     image.fileName = file.originalname;
-    image.thumbnairURL = thumbnailUrl.downloadURL;
+    image.thumbnairURL = thumbnailUrlSaved;
     image.url = url.downloadURL;
     image.ownerId = ownerId;
     image.dateCreated = new Date();
@@ -69,23 +82,23 @@ export class ImageService {
     let height: number;
     switch (sizeImage) {
       case 'large':
-        width = 1080;
-        height = 720;
+        width: 1080;
+        height: 720;
       case 'midle':
-        width = 800;
-        height = 600;
+        width: 800;
+        height: 600;
       case 'min':
-        width = 400;
-        height = 300;
+        width: 400;
+        height: 300;
         break;
 
       default:
-        width = 800;
-        height = 600;
+        width: 800;
+        height: 600;
     }
     const imageBuffer = await this.firebaseService.getImage(url);
     if (!imageBuffer) {
-      return null;
+      throw new NotFoundException('Image Not Found');
     }
 
     if (width || height) {
@@ -101,7 +114,14 @@ export class ImageService {
   }
 
   private async generateThumbnail(buffer: Buffer): Promise<Buffer> {
-    return await sharp(buffer).resize({ width: 100, height: 100 }).toBuffer();
+    if (!buffer || buffer.length === 0) {
+      throw new BadRequestException('Buffer is empty');
+    }
+    try {
+      return await sharp(buffer).resize({ width: 100, height: 100 }).toBuffer();
+    } catch (error) {
+      console.log('Error procesadno la imagem', error);
+    }
   }
 
   // async cacheImageUrl(imageId: string, imageUrl: string) {

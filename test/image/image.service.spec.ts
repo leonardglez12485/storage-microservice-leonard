@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { FirebaseService } from 'src/services/firebase/firebase.service';
-import { RedisService } from 'src/services/redis/redis.service';
+import { FirebaseService } from '../../src/services/firebase/firebase.service';
+import { RedisService } from '../../src/services/redis/redis.service';
 import { Repository } from 'typeorm';
 import { Image } from '../../src/aplication/images/entities/image.entity';
 
 //import * as sharp from 'sharp';
-import { ImageService } from 'src/aplication/images/images.service';
-import { CreateImageDto } from 'src/aplication/images/dto/create-image.dto';
+import { ImageService } from '../../src/aplication/images/images.service';
+import { CreateImageDto } from '../../src/aplication/images/dto/create-image.dto';
 
 describe('ImageService', () => {
   let imageService: ImageService;
@@ -23,6 +23,7 @@ describe('ImageService', () => {
           provide: FirebaseService,
           useValue: {
             uploadFile: jest.fn(),
+            getImage: jest.fn(),
           },
         },
         {
@@ -52,7 +53,9 @@ describe('ImageService', () => {
         encoding: '7bit',
         mimetype: 'text/plain',
         size: 0,
-        buffer: Buffer.from(''),
+        buffer: Buffer.from(
+          'https://firebasestorage.googleapis.com/v0/b/app-demo-3875e.appspot.com/o/files%2Fthumbnail-289616650_1474241472989920_7233755254774016175_n.jpg%202024-10-18%2023%3A15%3A44?alt=media&token=37e46677-93c1-4605-a9b1-912832e387cb',
+        ),
         stream: null,
         destination: '',
         filename: '',
@@ -74,7 +77,9 @@ describe('ImageService', () => {
         encoding: '7bit',
         mimetype: 'image/jpeg',
         size: 0,
-        buffer: Buffer.from(''),
+        buffer: Buffer.from(
+          'https://firebasestorage.googleapis.com/v0/b/app-demo-3875e.appspot.com/o/files%2Fthumbnail-289616650_1474241472989920_7233755254774016175_n.jpg%202024-10-18%2023%3A15%3A44?alt=media&token=37e46677-93c1-4605-a9b1-912832e387cb',
+        ),
         stream: null,
         destination: '',
         filename: '',
@@ -131,7 +136,9 @@ describe('ImageService', () => {
         encoding: '7bit',
         mimetype: 'image/jpeg',
         size: 0,
-        buffer: Buffer.from(''),
+        buffer: Buffer.from(
+          'https://firebasestorage.googleapis.com/v0/b/app-demo-3875e.appspot.com/o/files%2Fthumbnail-289616650_1474241472989920_7233755254774016175_n.jpg%202024-10-18%2023%3A15%3A44?alt=media&token=37e46677-93c1-4605-a9b1-912832e387cb',
+        ),
         stream: null,
         destination: '',
         filename: '',
