@@ -13,6 +13,8 @@ import * as sharp from 'sharp';
 import Redis from 'ioredis';
 import { RedisService } from '../../services/redis/redis.service';
 import { GetImageDto } from './dto/get-image.dto';
+import { User } from 'src/auth/entities/user.entity';
+import { validate as isUuid } from 'uuid';
 
 @Injectable()
 export class ImageService {
@@ -21,6 +23,8 @@ export class ImageService {
     private readonly firebaseService: FirebaseService,
     @InjectRepository(Image)
     private readonly imageRepository: Repository<Image>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly redisService: RedisService,
   ) {}
 
@@ -82,19 +86,22 @@ export class ImageService {
     let height: number;
     switch (sizeImage) {
       case 'large':
-        width: 1080;
-        height: 720;
+        console.log('large');
+        width = 1080;
+        height = 720;
+        break;
       case 'midle':
-        width: 800;
-        height: 600;
+        width = 800;
+        height = 600;
+        break;
       case 'min':
-        width: 400;
-        height: 300;
+        width = 400;
+        height = 300;
         break;
 
       default:
-        width: 800;
-        height: 600;
+        width = 800;
+        height = 600;
     }
     const imageBuffer = await this.firebaseService.getImage(url);
     if (!imageBuffer) {
@@ -108,11 +115,7 @@ export class ImageService {
     return imageBuffer;
   }
 
-  //===Find images by user====
-  async getImagesByUser(ownerId: string): Promise<Image[]> {
-    return await this.imageRepository.find({ where: { ownerId } });
-  }
-
+  //====Generate Thumbnails=====//
   private async generateThumbnail(buffer: Buffer): Promise<Buffer> {
     if (!buffer || buffer.length === 0) {
       throw new BadRequestException('Buffer is empty');
@@ -122,6 +125,48 @@ export class ImageService {
     } catch (error) {
       console.log('Error procesadno la imagem', error);
     }
+  }
+
+  //===Find images by user====
+  async getImagesByUser(ownerId: string): Promise<Image[]> {
+    return await this.imageRepository.find({ where: { ownerId } });
+  }
+
+  //===Audit an Image===
+  async getUserByImage(image: string): Promise<User> {
+    const searchConditions: Array<{
+      id?: string;
+      fileName?: string;
+      url?: string;
+    }> = [{ fileName: image }, { url: image }];
+    if (isUuid(image)) {
+      searchConditions.unshift({ id: image });
+    }
+
+    let imageFound = null;
+
+    for (const condition of searchConditions) {
+      imageFound = await this.imageRepository.findOne({
+        where: condition,
+      });
+      if (imageFound) break;
+    }
+
+    if (!imageFound) {
+      throw new NotFoundException('Image not found');
+    }
+
+    console.log(imageFound.ownerId);
+    const user = await this.userRepository.findOne({
+      where: { id: imageFound.ownerId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    //if(imageFound)
+    return imageFound;
   }
 
   // async cacheImageUrl(imageId: string, imageUrl: string) {

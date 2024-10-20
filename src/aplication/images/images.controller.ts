@@ -23,6 +23,7 @@ import { Image } from './entities/image.entity';
 //import path from 'path';
 //import { SizeImage } from 'src/common/enums/size-image.enum';
 import { GetImageDto } from './dto/get-image.dto';
+import { User } from 'src/auth/entities/user.entity';
 
 @ApiTags('Images')
 @Controller('images')
@@ -73,5 +74,12 @@ export class ImageController {
   @ApiBearerAuth('access-token')
   async getImagesByUser(@Param('ownerId') ownerId: string): Promise<Image[]> {
     return this.imageService.getImagesByUser(ownerId);
+  }
+
+  @Get('image/:search')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  async getUserbyImage(@Param('search') search: string): Promise<User> {
+    return this.imageService.getUserByImage(search);
   }
 }
