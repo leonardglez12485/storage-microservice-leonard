@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -10,7 +11,7 @@ import { Repository } from 'typeorm';
 import { Image } from './entities/image.entity';
 import * as sharp from 'sharp';
 import { GetImageDto } from './dto/get-image.dto';
-import { User } from 'src/auth/entities/user.entity';
+import { User } from '../../auth/entities/user.entity';
 import { validate as isUuid } from 'uuid';
 import { getImageDimensions } from '../../common/helpers/get-dimensions.helper';
 
@@ -95,7 +96,7 @@ export class ImageService {
     try {
       return await sharp(buffer).resize({ width: 100, height: 100 }).toBuffer();
     } catch (error) {
-      console.log('Error procesadno la imagem', error);
+      // console.log('Error procesadno la imagem', error);
     }
   }
 
@@ -145,6 +146,7 @@ export class ImageService {
       throw new NotFoundException('Image not found');
     }
     await this.firebaseService.deleteImage(dto.url);
+    await this.imageRepository.delete({ url: dto.url });
   }
 
   private isValidImage(file: any): boolean {

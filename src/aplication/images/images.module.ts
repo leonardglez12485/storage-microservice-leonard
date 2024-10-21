@@ -10,11 +10,13 @@ import { CacheModule } from '@nestjs/cache-manager';
 import redisStore from 'cache-manager-redis-store';
 import type { RedisClientOptions } from 'redis';
 import { ConfigModule } from '@nestjs/config';
+import { User } from 'src/auth/entities/user.entity';
+import { AuthService } from 'src/auth/auth.service';
 
 @Module({
   imports: [
     AuthModule,
-    TypeOrmModule.forFeature([Image]),
+    TypeOrmModule.forFeature([Image, User]),
     ConfigModule.forRoot(),
     CacheModule.register<RedisClientOptions>({
       store: redisStore as unknown as string,
@@ -24,6 +26,6 @@ import { ConfigModule } from '@nestjs/config';
     }),
   ],
   controllers: [ImageController],
-  providers: [ImageService, JwtAuthGuard, FirebaseService],
+  providers: [ImageService, AuthService, JwtAuthGuard, FirebaseService],
 })
 export class ImagesModule {}

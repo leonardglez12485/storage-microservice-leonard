@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './auth/entities/user.entity';
 import { SeedModule } from './seed/seed.module';
+import { Image } from './aplication/images/entities/image.entity';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { SeedModule } from './seed/seed.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Image]),
     ImagesModule,
     AuthModule,
     SeedModule,

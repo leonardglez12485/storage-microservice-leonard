@@ -50,38 +50,38 @@ export class AuthService {
     };
   }
 
-  async loginUserV2(loginUserDto: LoginUserDto) {
-    //==== Simulating a database user=====//
-    const mockUser = {
-      id: '1233456789',
-      email: 'test@example.com',
-      isActive: true,
-      validatePassword: async (password: string) => password === 'Password123',
-    };
+  // async loginUserV2(loginUserDto: LoginUserDto) {
+  //   //==== Simulating a database user=====//
+  //   const mockUser = {
+  //     id: '1233456789',
+  //     email: 'test@example.com',
+  //     isActive: true,
+  //     validatePassword: async (password: string) => password === 'Password123',
+  //   };
 
-    // Simulating a search users
-    const user =
-      mockUser.email === loginUserDto.email.toLowerCase() ? mockUser : null;
+  //   // Simulating a search users
+  //   const user =
+  //     mockUser.email === loginUserDto.email.toLowerCase() ? mockUser : null;
 
-    if (!user) {
-      throw new UnauthorizedException(`Email ${loginUserDto.email} not valid`);
-    }
+  //   if (!user) {
+  //     throw new UnauthorizedException(`Email ${loginUserDto.email} not valid`);
+  //   }
 
-    if (!user.isActive) {
-      throw new HttpException('User is disabled', HttpStatus.FORBIDDEN);
-    }
+  //   if (!user.isActive) {
+  //     throw new HttpException('User is disabled', HttpStatus.FORBIDDEN);
+  //   }
 
-    const payload = { username: user.email, sub: user.id };
-    const token = this.jwtService.sign(payload, {
-      expiresIn: '1h',
-      secret: process.env.JWT_SECRET,
-    });
+  //   const payload = { username: user.email, sub: user.id };
+  //   const token = this.jwtService.sign(payload, {
+  //     expiresIn: '1h',
+  //     secret: process.env.JWT_SECRET,
+  //   });
 
-    return {
-      user,
-      token,
-    };
-  }
+  //   return {
+  //     user,
+  //     token,
+  //   };
+  // }
 
   async findUserByEmail(email: string): Promise<User | undefined> {
     return this.userRepository.findOne({

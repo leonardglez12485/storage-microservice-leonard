@@ -42,7 +42,7 @@ describe('AuthService', () => {
     };
     jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
 
-    await expect(authService.loginUserV2(loginUserDto)).rejects.toThrow(
+    await expect(authService.loginUser(loginUserDto)).rejects.toThrow(
       UnauthorizedException,
     );
   });
@@ -58,7 +58,7 @@ describe('AuthService', () => {
     jest.spyOn(userRepository, 'findOne').mockResolvedValue(user);
     jest.spyOn(user, 'validatePassword').mockResolvedValue(false);
 
-    await expect(authService.loginUserV2(loginUserDto)).rejects.toThrow(
+    await expect(authService.loginUser(loginUserDto)).rejects.toThrow(
       HttpException,
     );
   });
@@ -66,16 +66,27 @@ describe('AuthService', () => {
   it('should return a token if credentials are valid', async () => {
     const loginUserDto: LoginUserDto = {
       email: 'test@example.com',
-      password: 'Password',
+      password: 'password',
     };
+
     const user = new User();
     user.id = '1';
     user.email = 'test@example.com';
     user.password = 'Password';
-    jest.spyOn(userRepository, 'findOne').mockResolvedValue(user);
-    jest.spyOn(user, 'validatePassword').mockResolvedValue(true);
+    user.validatePassword = jest.fn().mockResolvedValue(true);
 
-    const result = await authService.loginUserV2(loginUserDto);
-    expect(result).toEqual({ token: 'testToken' });
+    jest.spyOn(userRepository, 'findOne').mockResolvedValue(user);
+
+    const result = await authService.loginUser(loginUserDto);
+
+    expect(result).toEqual({
+      token: 'testToken',
+      user: {
+        id: '1',
+        email: 'test@example.com',
+        password: 'Password',
+        validatePassword: expect.any(Function),
+      },
+    });
   });
 });
