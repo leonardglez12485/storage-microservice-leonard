@@ -6,31 +6,24 @@ import { AuthModule } from 'src/auth/auth.module';
 import { FirebaseService } from 'src/services/firebase/firebase.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Image } from './entities/image.entity';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { RedisService } from 'src/services/redis/redis.service';
-//import { FirebaseService } from 'src/services/firebase/firebase.service';
+import { CacheModule } from '@nestjs/cache-manager';
+import redisStore from 'cache-manager-redis-store';
+import type { RedisClientOptions } from 'redis';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
     AuthModule,
     TypeOrmModule.forFeature([Image]),
-    ClientsModule.register([
-      {
-        name: 'IMAGE_CACHE',
-        transport: Transport.REDIS,
-        options: {
-          host: 'redis-axis-leonardglez12485.k.aivencloud.com',
-          port: 10886,
-          retryAttempts: 500,
-          retryDelay: 3000,
-          connectTimeout: 10000,
-          maxRetriesPerRequest: 2000,
-          password: process.env.REDIS_PASSWORD,
-        },
-      },
-    ]),
+    ConfigModule.forRoot(),
+    CacheModule.register<RedisClientOptions>({
+      store: redisStore as unknown as string,
+      // Store-specific configuration:
+      url: 'localhost:6379',
+      //port: process.env.REDIS_PASSWORD,
+    }),
   ],
   controllers: [ImageController],
-  providers: [ImageService, JwtAuthGuard, FirebaseService, RedisService],
+  providers: [ImageService, JwtAuthGuard, FirebaseService],
 })
 export class ImagesModule {}

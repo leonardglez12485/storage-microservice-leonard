@@ -5,6 +5,7 @@ import {
   ref,
   uploadBytesResumable,
   getDownloadURL,
+  deleteObject,
 } from 'firebase/storage';
 import * as config from './firebase.config';
 
@@ -67,6 +68,14 @@ export class FirebaseService {
     } catch (error) {
       console.error('Error retrieving image from Firebase:', error);
       return null;
+    }
+  }
+  async deleteImage(url: string): Promise<void> {
+    try {
+      const storageRef = ref(this.storage, url);
+      await deleteObject(storageRef);
+    } catch (error) {
+      console.error('Error deleting image from Firebase:', error);
     }
   }
 }

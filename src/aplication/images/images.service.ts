@@ -9,22 +9,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Image } from './entities/image.entity';
 import * as sharp from 'sharp';
-import Redis from 'ioredis';
-import { RedisService } from '../../services/redis/redis.service';
 import { GetImageDto } from './dto/get-image.dto';
 import { User } from 'src/auth/entities/user.entity';
 import { validate as isUuid } from 'uuid';
+import { getImageDimensions } from '../../common/helpers/get-dimensions.helper';
 
 @Injectable()
 export class ImageService {
-  private redisClient: Redis;
   constructor(
     private readonly firebaseService: FirebaseService,
     @InjectRepository(Image)
     private readonly imageRepository: Repository<Image>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly redisService: RedisService,
   ) {}
 
   async uploadImage(
@@ -73,45 +70,21 @@ export class ImageService {
 
     await this.imageRepository.save(image);
 
-    //await this.redisService.set(file.filename, image.url);
-
     return url;
   }
 
   //===Get image===
+
   async getImage(dto: GetImageDto): Promise<Buffer | null> {
     const { url, sizeImage } = dto;
-    let width: number;
-    let height: number;
-    switch (sizeImage) {
-      case 'large':
-        console.log('large');
-        width = 1080;
-        height = 720;
-        break;
-      case 'midle':
-        width = 800;
-        height = 600;
-        break;
-      case 'min':
-        width = 400;
-        height = 300;
-        break;
+    const { width, height } = getImageDimensions(sizeImage);
 
-      default:
-        width = 800;
-        height = 600;
-    }
     const imageBuffer = await this.firebaseService.getImage(url);
     if (!imageBuffer) {
       throw new NotFoundException('Image Not Found');
     }
 
-    if (width || height) {
-      return await sharp(imageBuffer).resize(width, height).toBuffer();
-    }
-
-    return imageBuffer;
+    return await sharp(imageBuffer).resize(width, height).toBuffer();
   }
 
   //====Generate Thumbnails=====//
@@ -166,15 +139,13 @@ export class ImageService {
     return imageFound;
   }
 
-  // async cacheImageUrl(imageId: string, imageUrl: string) {
-  //   const cacheKey = `image:${imageId}`;
-  //   await this.redisClient.set(cacheKey, imageUrl, 'EX', 3600); // Cache for 1 hour
-  // }
-
-  // async getCachedImageUrl(imageId: string): Promise<string | null> {
-  //   const cacheKey = `image:${imageId}`;
-  //   return await this.redisClient.get(cacheKey);
-  // }
+  async deleteImage(dto: GetImageDto): Promise<void> {
+    const image = await this.getImage(dto);
+    if (!image) {
+      throw new NotFoundException('Image not found');
+    }
+    await this.firebaseService.deleteImage(dto.url);
+  }
 
   private isValidImage(file: any): boolean {
     const imagePattern = /\.(jpg|jpeg|png|gif)$/i;
