@@ -10,6 +10,7 @@ import {
   Res,
   Query,
   Inject,
+  BadRequestException,
 } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Express } from 'express';
@@ -63,6 +64,13 @@ export class ImageController {
     @GetUser() user: any,
   ): Promise<string> {
     const createImageDto = { file };
+    const limit = 5 * 1024 * 1024;
+
+    if (file.size > limit) {
+      throw new BadRequestException(
+        'File size exceeds the maximum limit of 5MB',
+      );
+    }
     return this.imageService.uploadImage(createImageDto, user);
   }
 
